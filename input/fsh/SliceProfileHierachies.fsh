@@ -1,3 +1,4 @@
+// Valueset that holds all possible codes for child profile is not required
 ValueSet: AllChildCodes
 Id: all-child-codes
 Title: "All child codes"
@@ -6,20 +7,20 @@ Description: "All Child codes"
 * SCT#2275879005 "Abdominal migraine (disorder)"
 * SCT#21522001 "Abdominal pain (finding)"
 
+
 Profile: SDParentProfile
 Parent: Observation
 Id: sd-parent-observation
 Title: "Parent Profile"
 Description: "tbd"
-* code 1..1 //this is very important
-* code from AllChildCodes
-//* code = SCT#22253000 "Pain (finding)"
+* code 1..1 //not required
+* code from AllChildCodes // not required
 * value[x] only Quantity
 * valueQuantity 1..1
 * valueQuantity.code = http://unitsofmeasure.org#g/mL
 
 Profile: SDChild1Profile
-Parent: Observation
+Parent: SDParentProfile
 Id: sd-child1-observation
 Title: "Child1 Profile"
 Description: "Child1 Profile"
@@ -29,7 +30,7 @@ Description: "Child1 Profile"
 * valueQuantity.code = http://unitsofmeasure.org#g/mL
 
 Profile: SDChild2Profile
-Parent: Observation
+Parent: SDParentProfile
 Id: sd-child2-observation
 Title: "Child2 Profile"
 Description: "Child2 Profile"
@@ -47,7 +48,7 @@ Description: "Reference profile hierarchy"
 * hasMember ^slicing.rules = #open
 * hasMember ^slicing.ordered = false
 * hasMember contains
-        sliceMemberOne 0..*
+        sliceMemberOne 1..*
 * hasMember[sliceMemberOne] only Reference(SDParentProfile)
 
 Instance: Child1ObservationExample
@@ -92,4 +93,54 @@ Description: "SDReferenceProfileHierarchy"
 * valueQuantity = 391 'g/mL' "g/mL"
 * hasMember[0] = Reference(Child1ObservationExample)
 * hasMember[+] = Reference(Child2ObservationExample)
+//* hasMember[+] = Reference(HierarchyParentObservationExample)
+
+
+//Examples that produces no validation issue when reference points to a resource that is complient to the parent but does not have the profile tag
+Instance: SomeOther1ObservationExample
+InstanceOf: Observation
+Title: "some-other1-observation"
+Usage: #example
+Description: "some-other1-observation"
+* status = 	#preliminary
+* code.coding[0] = SCT#22253000 "Pain (finding)"
+* effectiveDateTime = 1998-02-13T12:30:17+02:00
+* valueQuantity = 10.8 'g/mL' "g/mL"
+
+Instance: NoFailsReferenceHierachyExample
+InstanceOf: SDReferenceProfileHierarchy
+Title: "NoFailsReferenceHierachyExample"
+Usage: #example
+Description: "Examples that produces no validation issue when reference points to a resource that is complient to the parent but does not have the profile tag"
+* status = 	#preliminary
+* category = http://terminology.hl7.org/CodeSystem/observation-category#imaging
+* code.coding[0] = SCT#131184002 "Area of defined region"
+* effectiveDateTime = 1998-02-13T12:30:17+02:00
+* valueQuantity = 391 'g/mL' "g/mL"
+* hasMember[0] = Reference(SomeOther1ObservationExample)
+
+
+//Examples to produce validation issue when reference points to a resource that is not complient to the parent profile
+Instance: SomeOther2ObservationExample
+InstanceOf: Observation
+Title: "some-other2-observation"
+Usage: #example
+Description: "some-other2-observation"
+* status = 	#preliminary
+* code.coding[0] = SCT#22253000 "Pain (finding)"
+* effectiveDateTime = 1998-02-13T12:30:17+02:00
+* valueCodeableConcept = SCT#22253000 "Pain (finding)"
+
+Instance: FailsReferenceHierachyExample
+InstanceOf: SDReferenceProfileHierarchy
+Title: "FailsReferenceHierachyExample"
+Usage: #example
+Description: "Examples to produce validation issue when reference points to a resource that is not complient to the parent profile"
+* status = 	#preliminary
+* category = http://terminology.hl7.org/CodeSystem/observation-category#imaging
+* code.coding[0] = SCT#387713003 "Surgical procedure (procedure)"
+* effectiveDateTime = 1998-02-13T12:30:17+02:00
+* valueQuantity = 391 'g/mL' "g/mL"
+* hasMember[0] = Reference(SomeOther2ObservationExample)
+
 //* hasMember[+] = Reference(HierarchyParentObservationExample)
